@@ -1,0 +1,33 @@
+! ==========================================
+! Member 3 - Port Security Commands
+! ==========================================
+
+! SW-BR Fa0/2 - Port Security Configuration
+
+enable
+configure terminal
+interface fastEthernet 0/2
+switchport mode access
+switchport port-security
+switchport port-security maximum 1
+switchport port-security mac-address sticky
+switchport port-security violation shutdown
+end
+
+! ==========================================
+! Port Security Verification
+! ==========================================
+
+show port-security interface fastEthernet 0/2
+show interfaces status
+
+! ==========================================
+! Port Security Recovery
+! ==========================================
+
+enable
+configure terminal
+interface fastEthernet 0/2
+shutdown
+no shutdown
+end

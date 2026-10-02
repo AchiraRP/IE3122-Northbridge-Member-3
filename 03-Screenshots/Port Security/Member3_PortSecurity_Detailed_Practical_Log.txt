@@ -1,0 +1,673 @@
+NORTHBRIDGE PORT SECURITY – WHY THIS CONFIGURATION WAS CHOSEN
+============================================================
+
+This section explains the Northbridge security weakness that led to selecting Port Security for Member 3's plan-linked hardening configuration.
+
+1. NORTHBRIDGE SECURITY WEAKNESS RELEVANT TO PORT SECURITY
+------------------------------------------------------------
+
+The Northbridge planning material identifies a physical/network-access weakness around unauthorized device access at branch network equipment. The Port Security planning notes describe the security problem as:
+
+"Unauthorized network-device access resulting from weak physical security at branch network equipment."
+
+In the Northbridge control mapping, Threat 3.2 is associated with Layer 2 Security Hardening (Control 2). The Phase 4 hardening assignment specifically allocates:
+
+Member 3:
+- Plan-linked configuration: Port Security
+- Threat: 3.2
+- Control: 2 (Layer 2 Security Hardening)
+- Free-choice configuration: UplinkFast
+
+2. WHAT VULNERABILITY / WEAKNESS DOES THIS CREATE?
+------------------------------------------------------------
+
+The relevant weakness is that an unauthorized device could potentially be connected to a switch access port and attempt to use the network connection intended for a legitimate endpoint.
+
+In a normal unsecured access-port situation:
+
+Legitimate PC
+    |
+    v
+Switch access port
+    |
+    v
+Network
+
+If an unauthorized device is physically able to reach the same access port:
+
+Rogue device
+    |
+    v
+Switch access port
+    |
+    v
+Network
+
+Without an appropriate Layer 2 access control mechanism, the switchport does not by itself enforce that only the intended endpoint's MAC address can use the port.
+
+This is why the practical test used a Rogue-PC: the legitimate PC-BR was disconnected and a different-MAC device was connected to the same protected Fa0/2.
+
+3. WHY PORT SECURITY FITS THIS NORTHBRIDGE WEAKNESS
+------------------------------------------------------------
+
+Port Security provides a switch-level control for the access-port problem.
+
+For this practical, the policy was:
+
+- Fa0/2 is an access port.
+- Only 1 MAC address is permitted.
+- The legitimate PC-BR MAC is learned using sticky MAC learning.
+- A different MAC address is treated as a security violation.
+- Violation mode is set to shutdown.
+
+Therefore the intended security chain is:
+
+Northbridge weakness:
+Unauthorized device can use an access port
+        |
+        v
+Layer 2 access control requirement
+        |
+        v
+Port Security on the access port
+        |
+        v
+Learn legitimate PC-BR MAC
+        |
+        v
+Allow 1 MAC only
+        |
+        v
+Different MAC detected
+        |
+        v
+Security violation
+        |
+        v
+Port enters err-disabled / Secure-shutdown
+
+4. IMPORTANT DISTINCTION: PORT SECURITY VS. OTHER NORTHBRIDGE LAYER 2 RISKS
+------------------------------------------------------------
+
+Port Security should not be described as the solution to every Layer 2 threat.
+
+The Northbridge control mapping also associates Layer 2 Security Hardening with Threat 1.1. The planning material discusses ARP spoofing as a separate Layer 2 threat and identifies DHCP Snooping and Dynamic ARP Inspection (DAI) as relevant defenses for that problem.
+
+The distinction is:
+
+- Port Security:
+  Controls which MAC address(es) are allowed on a switch access port.
+
+- DHCP Snooping:
+  Builds trusted DHCP binding information and helps prevent rogue DHCP-server behavior.
+
+- Dynamic ARP Inspection (DAI):
+  Validates ARP traffic using trusted binding information and is used to address ARP-spoofing-related risk.
+
+Therefore, in this Member 3 practical, Port Security is specifically being used for the unauthorized-device/access-port weakness associated with Threat 3.2 / Control 2, as assigned in the Phase 4 configuration plan.
+
+5. NORTHBRIDGE SECURITY OBJECTIVE
+------------------------------------------------------------
+
+The objective of this configuration is to reduce the possibility of an unauthorized device using a protected branch switch access port.
+
+The practical evidence demonstrates the objective rather than only describing it:
+
+1. PC-BR was the legitimate endpoint.
+2. Its MAC address was learned as a sticky MAC.
+3. Only one MAC address was allowed.
+4. PC-BR was disconnected.
+5. Rogue-PC had a different MAC address.
+6. Rogue-PC was connected to the same protected Fa0/2.
+7. Traffic from Rogue-PC triggered the Port Security violation.
+8. Fa0/2 became err-disabled / Secure-shutdown.
+9. The violation counter increased to 1.
+10. The legitimate PC-BR was then restored and connectivity was verified.
+
+This gives a direct Northbridge scenario -> vulnerability -> control -> Packet Tracer evidence chain.
+
+6. SOURCE BASIS USED FOR THIS SECTION
+------------------------------------------------------------
+
+The assignment-specific basis for this explanation comes from the Northbridge Phase 4 Network Hardening Configuration document and the Port Security planning material.
+
+The Phase 4 document explicitly assigns Member 3:
+Port Security (Threat 3.2 / Control 2) + UplinkFast.
+
+The Port Security planning material describes the relevant security problem as unauthorized network-device access resulting from weak physical security at branch network equipment and links Port Security to Threat 3.2 / Control 2.
+
+The wider Northbridge control mapping identifies:
+Control 2 = Layer 2 Security Hardening.
+
+Note:
+This practical log is a learning/planning record. For the submitted assignment, use your group's verified wording and rewrite any explanatory text in your own words according to the course's academic-use requirements.
+
+============================================================
+
+IE3122 NETWORK SECURITY NORTHBRIDGE SAVINGS & FINANCE MEMBER 3 – PORT
+SECURITY PRACTICAL LOG Detailed Configuration, Verification,
+Troubleshooting, Evidence and Recovery
+
+============================================================ 1. PURPOSE
+============================================================
+
+This document records the Port Security practical completed so far for
+Member 3.
+
+Switch: SW-BR Protected interface: FastEthernet 0/2 (Fa0/2) Legitimate
+endpoint: PC-BR Rogue endpoint: Rogue-PC VLAN: 10 BR LAN:
+192.168.20.0/24 R-BR gateway: 192.168.20.1
+
+Member 3 hardening allocation: 1. Port Security – Threat 3.2 / Control 2
+2. UplinkFast – second configuration, not yet completed
+
+The purpose of Port Security is to restrict an access port to one
+learned MAC address and shut the port down when a different MAC is
+detected.
+
+============================================================ 2. TOPOLOGY
+AND RELEVANT CONNECTION
+============================================================
+
+PC-BR Fa0 -> SW-BR Fa0/2 R-BR Gi0/0 -> SW-BR Fa0/1
+
+R-BR Gi0/0: 192.168.20.1/24
+
+PC-BR: 192.168.20.100/24 Gateway: 192.168.20.1
+
+The protected interface is SW-BR FastEthernet 0/2.
+
+============================================================ 3. WORKING
+FILE AND FOLDERS
+============================================================
+
+Main folder: F:-Northbridge-Member-3
+
+Folders: 01-Original 02-Working 03-Screenshots 04-Commands 05-Final
+
+Original: 01-OriginalTopology.pkt
+
+Working file: 02-Working_Member3_PortSecurity_UplinkFast.pkt
+
+The original topology was kept untouched and configuration work was done
+in the working copy.
+
+============================================================ 4. BASELINE
+VERIFICATION
+============================================================
+
+R-HO: show ip interface brief
+
+Observed: Gi0/0 = 192.168.10.1, up/up Gi0/1 = 10.0.0.1, up/up
+
+Saved: 02_Baseline_RHO_Interfaces.png
+
+R-BR: show ip interface brief
+
+Observed: Gi0/0 = 192.168.20.1, up/up Gi0/1 = 10.0.0.2, up/up
+
+Saved: 03_Baseline_RBR_Interfaces.png
+
+PC-HO: ipconfig
+
+Observed: IPv4 = 192.168.10.100 Mask = 255.255.255.0 Gateway =
+192.168.10.1
+
+Saved: 04_Baseline_PCHO_DHCP.png
+
+PC-BR: ipconfig
+
+Observed: IPv4 = 192.168.20.100 Mask = 255.255.255.0 Gateway =
+192.168.20.1
+
+Saved: 05_Baseline_PCBR_DHCP.png
+
+PC-HO to PC-BR: ping 192.168.20.100
+
+The first run had 25% loss. A second clean run produced 4/4 replies and
+0% loss.
+
+Saved: 06_Baseline_Ping_PCHO_to_PCBR.png
+
+SW-BR: show interfaces status
+
+Relevant result: Fa0/1 = connected, VLAN 10 Fa0/2 = connected, VLAN 10
+
+Saved: 07_Baseline_SWBR_Port_Status.png
+
+============================================================ 5. PORT
+SECURITY CONFIGURATION
+============================================================
+
+On SW-BR:
+
+configure terminal interface fastEthernet 0/2 switchport mode access
+switchport port-security switchport port-security maximum 1 switchport
+port-security mac-address sticky switchport port-security violation
+shutdown end
+
+What each command does:
+
+switchport mode access Makes Fa0/2 an access port for an endpoint.
+
+switchport port-security Enables Port Security on the interface.
+
+switchport port-security maximum 1 Allows only one secure MAC address.
+
+switchport port-security mac-address sticky Automatically learns the
+legitimate MAC and stores it as a sticky secure MAC.
+
+switchport port-security violation shutdown Shuts down the port when an
+unauthorized MAC is detected.
+
+The switch returned to Switch# after end and displayed the normal
+console configuration message: %SYS-5-CONFIG_I: Configured from console
+by console
+
+============================================================ 6. INITIAL
+PORT SECURITY VERIFICATION
+============================================================
+
+Command:
+
+show port-security interface fastEthernet 0/2
+
+Initial important output:
+
+Port Security : Enabled Port Status : Secure-up Violation Mode :
+Shutdown Maximum MAC Addresses : 1 Total MAC Addresses : 0 Configured
+MAC Addresses : 0 Sticky MAC Addresses : 0 Security Violation Count : 0
+
+This was not a configuration error. Sticky learning had not happened
+because the legitimate PC had not generated traffic after Port Security
+was enabled.
+
+============================================================ 7. MAKING
+PC-BR GENERATE TRAFFIC
+============================================================
+
+On PC-BR:
+
+ping 192.168.20.1
+
+Purpose: The traffic allowed SW-BR to see and learn PC-BR’s MAC address
+on Fa0/2.
+
+============================================================ 8. STICKY
+MAC VERIFICATION
+============================================================
+
+Command:
+
+show port-security interface fastEthernet 0/2
+
+Important output:
+
+Port Security : Enabled Port Status : Secure-up Violation Mode :
+Shutdown Maximum MAC Addresses : 1 Total MAC Addresses : 1 Configured
+MAC Addresses : 0 Sticky MAC Addresses : 1 Last Source Address:Vlan :
+0001.C719.40EC:10 Security Violation Count : 0
+
+Legitimate PC-BR MAC: 0001.C719.40EC
+
+This proves that: - Port Security is enabled. - Maximum allowed MAC
+addresses = 1. - One MAC was learned. - The learned MAC is sticky. - No
+violation had happened yet.
+
+Combined annotated evidence was saved as:
+
+09_PortSecurity_Configuration_and_Verification.png
+
+The combined image contains: 1. Configuration commands 2. Initial
+verification before MAC learning 3. Verification after sticky MAC
+learning
+
+The planned filename 08_PortSecurity_Commands.png was not finalized
+separately because the combined image already contains the command
+sequence.
+
+============================================================ 9. ROGUE
+DEVICE TEST ============================================================
+
+The test procedure was:
+
+1.  Disconnect PC-BR.
+2.  Keep the sticky MAC on Fa0/2.
+3.  Add Rogue-PC.
+4.  Connect Rogue-PC to Fa0/2.
+5.  Check its MAC.
+6.  Give it a valid IP.
+7.  Generate traffic.
+8.  Verify the violation.
+9.  Recover Fa0/2.
+10. Reconnect PC-BR.
+11. Verify connectivity.
+
+PC-BR was disconnected from Fa0/2.
+
+Rogue-PC was added and connected to: Rogue-PC Fa0 -> SW-BR Fa0/2
+
+============================================================ 10. FIRST
+ROGUE TEST AND WHY IT DID NOT IMMEDIATELY PROVE A VIOLATION
+============================================================
+
+After connecting Rogue-PC, the first check still showed:
+
+Port Status = Secure-up Security Violation Count = 0
+
+The first ping from Rogue-PC to 192.168.20.1 timed out.
+
+Important: A failed ping alone does NOT prove Port Security triggered.
+
+MAC table check:
+
+show mac address-table interface fastEthernet 0/2
+
+Output:
+
+Vlan Mac Address Type Ports 10 0001.c719.40ec STATIC Fa0/2
+
+This proved the legitimate sticky MAC was still secured on Fa0/2.
+
+============================================================ 11.
+CHECKING THE ROGUE-PC MAC
+============================================================
+
+On Rogue-PC:
+
+ipconfig /all
+
+Rogue-PC MAC: 0060.3E3A.A14E
+
+Legitimate PC-BR MAC: 0001.C719.40EC
+
+The MACs were different, so Rogue-PC was genuinely a different device.
+
+However, Rogue-PC initially showed:
+
+IPv4 Address = 0.0.0.0 Subnet Mask = 0.0.0.0 Default Gateway = 0.0.0.0
+
+Therefore it did not have a valid IPv4 configuration.
+
+============================================================ 12. FIXING
+ROGUE-PC ADDRESSING
+============================================================
+
+Rogue-PC was configured with:
+
+IPv4 Address: 192.168.20.50 Subnet Mask: 255.255.255.0 Default Gateway:
+192.168.20.1 DNS: left empty
+
+This placed it on the same BR LAN.
+
+The MAC remained: 0060.3E3A.A14E
+
+============================================================ 13.
+SUCCESSFUL PORT SECURITY VIOLATION
+============================================================
+
+Rogue-PC generated:
+
+ping 192.168.20.1
+
+The protected interface then became disabled.
+
+Command:
+
+show interfaces status
+
+Relevant result:
+
+Fa0/2 err-disabled 10
+
+This is the interface-level proof that the Port Security violation
+caused the port to shut down.
+
+Saved:
+
+11_PortSecurity_Violation_ErrDisabled.png
+
+============================================================ 14. CLI
+VERIFICATION OF THE VIOLATION
+============================================================
+
+Command:
+
+show port-security interface fastEthernet 0/2
+
+Successful violation output:
+
+Port Security : Enabled Port Status : Secure-shutdown Violation Mode :
+Shutdown Maximum MAC Addresses : 1 Total MAC Addresses : 1 Configured
+MAC Addresses : 0 Sticky MAC Addresses : 1 Last Source Address:Vlan :
+0060.3E3A.A14E:10 Security Violation Count : 1
+
+Important values:
+
+Legitimate sticky MAC: 0001.C719.40EC
+
+Rogue-PC MAC: 0060.3E3A.A14E
+
+Violation Count: 1
+
+Port Status: Secure-shutdown
+
+This is the strongest CLI evidence that the security control worked.
+
+Saved:
+
+10_PortSecurity_Violation_Verification.png
+
+============================================================ 15. PORT
+RECOVERY ============================================================
+
+To recover Fa0/2:
+
+enable configure terminal interface fastEthernet 0/2 shutdown no
+shutdown end
+
+Rogue-PC was kept disconnected.
+
+The original PC-BR was then reconnected:
+
+PC-BR Fa0 -> SW-BR Fa0/2
+
+using Copper Straight-Through.
+
+============================================================ 16.
+RECOVERY VERIFICATION
+============================================================
+
+Command:
+
+show interfaces status
+
+Relevant output:
+
+Fa0/2 connected 10 a-full a-100
+
+This proved the protected port had recovered.
+
+Saved:
+
+12_PortSecurity_Recovery.png
+
+============================================================ 17. FINAL
+LEGITIMATE CONNECTIVITY TEST
+============================================================
+
+On PC-BR:
+
+ping 192.168.20.1
+
+Result:
+
+Packets: Sent = 4 Received = 4 Lost = 0 (0% loss)
+
+This proved: - PC-BR was operational again. - Fa0/2 was recovered. -
+Legitimate connectivity was restored. - The security test did not leave
+the legitimate endpoint permanently disconnected.
+
+Saved:
+
+13_PortSecurity_Final_Connectivity.png
+
+============================================================ 18.
+COMPLETE CORE COMMAND SET
+============================================================
+
+enable configure terminal interface fastEthernet 0/2 switchport mode
+access switchport port-security switchport port-security maximum 1
+switchport port-security mac-address sticky switchport port-security
+violation shutdown end
+
+============================================================ 19.
+VERIFICATION COMMANDS
+============================================================
+
+show port-security interface fastEthernet 0/2
+
+show interfaces status
+
+show mac address-table interface fastEthernet 0/2
+
+PC commands:
+
+ipconfig ipconfig /all ping 192.168.20.1
+
+============================================================ 20.
+COMPLETE CAUSE-AND-EFFECT CHAIN
+============================================================
+
+Normal:
+
+PC-BR MAC 0001.C719.40EC -> SW-BR Fa0/2 -> Sticky MAC learned -> Port
+Security allows the legitimate device
+
+Rogue test:
+
+Rogue-PC MAC 0060.3E3A.A14E -> SW-BR Fa0/2 -> Different MAC detected ->
+Port Security violation -> Violation Mode = Shutdown -> Fa0/2 =
+err-disabled / Secure-shutdown -> Security Violation Count = 1
+
+Recovery:
+
+shutdown no shutdown -> Fa0/2 = connected -> PC-BR reconnects -> ping
+192.168.20.1 -> 4/4 replies, 0% loss
+
+============================================================ 21.
+TROUBLESHOOTING SUMMARY
+============================================================
+
+Issue 1: Total MAC Addresses = 0 and Sticky MAC Addresses = 0.
+
+Why: PC-BR had not generated traffic after sticky learning was enabled.
+
+Fix: ping 192.168.20.1 from PC-BR.
+
+Result: Sticky MAC learned: 0001.C719.40EC
+
+Issue 2: Rogue-PC ping timed out but the switch still showed Secure-up
+and violation count 0.
+
+Why: A failed ping does not itself prove Port Security triggered.
+Rogue-PC also initially had no valid IPv4 address.
+
+Fix: Check switch state and MAC table, then run ipconfig /all on
+Rogue-PC.
+
+Issue 3: Rogue-PC showed IPv4 0.0.0.0, mask 0.0.0.0 and gateway 0.0.0.0.
+
+Fix: Configure: 192.168.20.50 / 255.255.255.0 Gateway 192.168.20.1
+
+Issue 4: The Rogue-PC link became red.
+
+Why: Fa0/2 was placed into err-disabled/Secure-shutdown after the Port
+Security violation.
+
+Verification: show interfaces status show port-security interface
+fastEthernet 0/2
+
+Issue 5: Legitimate PC-BR needed to be restored after the test.
+
+Fix: shutdown no shutdown
+
+Then reconnect PC-BR and verify connected status and successful ping.
+
+============================================================ 22.
+EVIDENCE FILES COMPLETED
+============================================================
+
+Baseline: 01_Base_Topology.png 02_Baseline_RHO_Interfaces.png
+03_Baseline_RBR_Interfaces.png 04_Baseline_PCHO_DHCP.png
+05_Baseline_PCBR_DHCP.png 06_Baseline_Ping_PCHO_to_PCBR.png
+07_Baseline_SWBR_Port_Status.png
+
+Port Security: 09_PortSecurity_Configuration_and_Verification.png
+10_PortSecurity_Violation_Verification.png
+11_PortSecurity_Violation_ErrDisabled.png 12_PortSecurity_Recovery.png
+13_PortSecurity_Final_Connectivity.png
+
+08_PortSecurity_Commands.png was not separately finalized because the
+command sequence is already included in the combined
+configuration/verification evidence.
+
+============================================================ 23. VIVA
+QUICK ANSWERS
+============================================================
+
+Q: What did you configure?
+
+A: I configured Port Security on SW-BR FastEthernet 0/2, the access port
+connected to PC-BR. I enabled Port Security, limited the port to one MAC
+address, enabled sticky MAC learning, and configured violation mode as
+shutdown.
+
+Q: Why sticky MAC?
+
+A: It lets the switch dynamically learn the legitimate endpoint’s MAC
+and retain it as a secure MAC address instead of manually entering the
+MAC.
+
+Q: Why maximum 1?
+
+A: The port is intended for one legitimate endpoint, PC-BR. A different
+MAC appearing on that port should therefore be treated as unauthorized.
+
+Q: What happens when a rogue device connects?
+
+A: If a different source MAC is detected, the configured shutdown
+violation mode causes the port to become err-disabled/Secure-shutdown.
+
+Q: How did you prove it?
+
+A: I disconnected PC-BR, connected Rogue-PC with a different MAC,
+generated traffic, and verified Fa0/2 became err-disabled. The Port
+Security output showed Secure-shutdown and Security Violation Count = 1.
+
+Q: What were the MAC addresses?
+
+A: Legitimate PC-BR: 0001.C719.40EC
+
+Rogue-PC: 0060.3E3A.A14E
+
+Q: How did you recover the port?
+
+A: I entered shutdown followed by no shutdown on Fa0/2, reconnected
+PC-BR, verified Fa0/2 was connected, and successfully pinged the gateway
+with 0% packet loss.
+
+============================================================ 24. CURRENT
+STATUS ============================================================
+
+Port Security configuration: COMPLETED Sticky MAC learning: COMPLETED
+Rogue-device test: COMPLETED Err-disabled verification: COMPLETED
+Violation counter verification: COMPLETED Port recovery: COMPLETED PC-BR
+reconnection: COMPLETED Final connectivity: COMPLETED – 4/4 replies, 0%
+loss
+
+Next Member 3 configuration: UPLINKFAST
+
+============================================================ END OF PORT
+SECURITY PRACTICAL LOG
+============================================================

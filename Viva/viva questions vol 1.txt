@@ -1,0 +1,844 @@
+Yes. I checked the **actual Northbridge Member 3 threat material and the Phase 4 hardening document first**.
+
+## Your Member 3 threats
+
+You have **exactly TWO threats**:
+
+### Threat 3.1 — Unauthorized Remote Access via Shared VPN
+
+**Asset:** Head-office internal systems and customer database.
+
+**Vulnerability:** Northbridge uses a single shared VPN account for remote staff and contractors, with no MFA and no reliable individual accountability.
+
+**Threat:** An external attacker who obtains the shared VPN credentials, or a former IT contractor who still has access.
+
+**Exploit:** Abuse the shared VPN credentials because they are not tied to an individual and are not protected by MFA.
+
+**Attack:** Attacker connects through the VPN, gains an internal foothold, performs reconnaissance across the flat/unsegmented network, and attempts to reach systems such as the core banking database.
+
+**Impact:** Unauthorized access to customer data/internal systems, possible data extraction or ransomware staging, with poor ability to determine who accessed the network.
+
+**Risk:** High. Pasted markdown(20260921-152417)
+
+---
+
+### Threat 3.2 — DHCP Spoofing at Branch Offices
+
+**Asset:** Branch offices and their connections to the head office.
+
+**Vulnerability:** Weak physical security around branch networking equipment, including uncontrolled physical access/unlocked cabinets and lack of Layer 2 protections.
+
+**Threat:** An intruder posing as a visitor or maintenance worker.
+
+**Exploit:** DHCP clients trust the first DHCP response; the attacker can first perform DHCP starvation and then introduce a rogue DHCP server.
+
+**Attack:** Rogue DHCP server provides malicious network configuration.
+
+**Impact:** Client traffic can be redirected through the attacker, creating a MITM position for monitoring or disrupting traffic to the head office.
+
+This is the threat directly associated with your **Port Security practical** through the Phase 4 assignment's Threat 3.2 / Control 2 mapping. Pasted markdown(20260921-152417)
+
+---
+
+# Your practical configurations
+
+Your Phase 4 assignment originally gave Member 3:
+
+| Configuration | Assignment |
+|---|---|
+| **Port Security** | Threat 3.2 / Control 2 |
+| **UplinkFast** | Free-choice configuration |
+
+The Phase 4 document explicitly assigns that combination. Phase4_Network_Hardening_Config…
+
+However, your actual implementation became:
+
+1. **Port Security** — completed and tested
+2. **Extended ACL – BYOD Network Isolation** — separately implemented and tested because UplinkFast could not be meaningfully implemented in your Packet Tracer environment/topology.
+
+So when the lecturer asks about your work, **don't confuse the threat model with the practical configurations**:
+
+> **My two threats are Threat 3.1 and Threat 3.2. My plan-linked practical configuration is Port Security for Threat 3.2. I also implemented an Extended ACL as my second practical configuration to demonstrate network segmentation for the BYOD threat.**
+
+Your Extended ACL practical is specifically mapped to **Threat 4.2 / Control 1**, so remember that this is a *separate group threat*, not one of your individually identified threats. Your practical log explicitly makes that distinction. Pasted text
+
+---
+
+# Member 3 Viva Master Question Bank
+
+I'll organize this like an actual lecturer could question you.
+
+---
+
+# PART 1 — Basic Member 3 Questions
+
+### Q1. What were your two threats?
+
+**Answer:**
+
+> My two threats were **Threat 3.1, Unauthorized Remote Access via Shared VPN**, and **Threat 3.2, DHCP Spoofing at Branch Offices**.
+
+---
+
+### Q2. What is Threat 3.1?
+
+**Answer:**
+
+> Threat 3.1 is unauthorized remote access through Northbridge's shared VPN account. The problem is that remote staff and contractors use shared credentials without MFA or individual accountability. An attacker who obtains those credentials can enter the internal network through the VPN.
+
+---
+
+### Q3. What is the main vulnerability in Threat 3.1?
+
+**Answer:**
+
+> The main vulnerability is the use of a **shared VPN account without MFA and without individual accountability**.
+
+---
+
+### Q4. Why is individual accountability important?
+
+**Answer:**
+
+> If everyone uses the same VPN account, the organization cannot reliably determine which individual accessed the network. Individual accounts provide attribution and make monitoring and investigation more effective.
+
+---
+
+### Q5. What is the attack in Threat 3.1?
+
+**Answer:**
+
+> The attacker uses the shared VPN credentials to obtain an internal foothold and then performs reconnaissance across the flat network to identify valuable internal systems.
+
+---
+
+### Q6. What is the impact?
+
+**Answer:**
+
+> The attacker could access internal systems and potentially customer data, and the VPN foothold could also be used as a staging point for further attacks such as data extraction or ransomware.
+
+---
+
+# PART 2 — Threat 3.2 Questions
+
+### Q7. What is Threat 3.2?
+
+**Answer:**
+
+> Threat 3.2 is **DHCP Spoofing at Branch Offices**.
+
+---
+
+### Q8. What is the vulnerability?
+
+**Answer:**
+
+> The branch offices have weak physical security around networking equipment, including uncontrolled physical access and unlocked network cabinets. The scenario also indicates a lack of Layer 2 protections.
+
+---
+
+### Q9. How does DHCP spoofing work?
+
+**Answer:**
+
+> A rogue DHCP server responds to clients and provides malicious network configuration, such as an attacker-controlled default gateway. The attacker can first use DHCP starvation to exhaust the legitimate DHCP server's available addresses, making the rogue server more likely to serve clients.
+
+---
+
+### Q10. What is DHCP starvation?
+
+**Answer:**
+
+> DHCP starvation is an attack where an attacker sends many DHCP requests, commonly using spoofed MAC addresses, to consume the available DHCP address pool.
+
+---
+
+### Q11. Why is a rogue DHCP server dangerous?
+
+**Answer:**
+
+> Because clients may accept the attacker's DHCP response and receive a malicious gateway or DNS configuration. This can allow the attacker to position themselves between the client and legitimate network resources.
+
+---
+
+### Q12. What is the potential impact?
+
+**Answer:**
+
+> The attacker can create a man-in-the-middle position, allowing traffic to be monitored, modified, or disrupted.
+
+---
+
+# PART 3 — Port Security
+
+This is probably the **most important practical section** for you.
+
+### Q13. What configuration did you implement?
+
+**Answer:**
+
+> I configured **Port Security on SW-BR FastEthernet 0/2**, which is the access port connected to PC-BR.
+
+---
+
+### Q14. Why did you choose Port Security?
+
+**Answer:**
+
+> Port Security was specifically assigned to me as the plan-linked hardening configuration for Threat 3.2 and Control 2. It provides Layer 2 access-port control by restricting which MAC address can use the port.
+
+---
+
+### Q15. What does Port Security actually protect against?
+
+**Answer:**
+
+> It helps prevent unauthorized devices from using a protected switch access port by restricting the allowed source MAC addresses.
+
+---
+
+### Q16. Does Port Security directly prevent DHCP spoofing?
+
+**Answer:**
+
+> **No.** Port Security and DHCP Snooping are different controls. Port Security restricts which MAC addresses can use an access port, while DHCP Snooping specifically helps prevent rogue DHCP-server behavior.
+
+This distinction is important. Your own practical notes explicitly make it. Pasted text
+
+---
+
+### Q17. Then why is Port Security associated with Threat 3.2?
+
+**Answer:**
+
+> Because the Phase 4 practical assignment explicitly maps my Port Security configuration to Threat 3.2 and Control 2. In the Northbridge scenario, weak physical security could allow an unauthorized device to be connected to a branch access port. Port Security provides an additional Layer 2 control against that unauthorized device connection.
+
+---
+
+### Q18. What port did you configure?
+
+**Answer:**
+
+> **SW-BR FastEthernet 0/2**, or `Fa0/2`.
+
+---
+
+### Q19. What device normally connects to Fa0/2?
+
+**Answer:**
+
+> **PC-BR**.
+
+---
+
+### Q20. What VLAN is PC-BR on?
+
+**Answer:**
+
+> VLAN 10.
+
+---
+
+### Q21. What is the branch network?
+
+**Answer:**
+
+> `192.168.20.0/24`.
+
+---
+
+### Q22. What is the branch router gateway?
+
+**Answer:**
+
+> `192.168.20.1`.
+
+---
+
+# PART 4 — Port Security Commands
+
+### Q23. Explain this command:
+
+```text
+switchport mode access
+```
+
+**Answer:**
+
+> It configures the interface as an access port, which is appropriate for an endpoint such as PC-BR rather than a trunk carrying multiple VLANs.
+
+---
+
+### Q24. What does this do?
+
+```text
+switchport port-security
+```
+
+**Answer:**
+
+> It enables Port Security on that interface.
+
+---
+
+### Q25. Why did you configure:
+
+```text
+switchport port-security maximum 1
+```
+
+**Answer:**
+
+> Because Fa0/2 is intended for one legitimate endpoint, PC-BR. Therefore, I configured the port to allow only one secure MAC address.
+
+---
+
+### Q26. Why did you use sticky MAC?
+
+```text
+switchport port-security mac-address sticky
+```
+
+**Answer:**
+
+> Sticky learning allows the switch to dynamically learn the legitimate device's MAC address and treat it as a secure MAC address instead of requiring me to manually enter the MAC address.
+
+---
+
+### Q27. What MAC address did the switch learn?
+
+**Answer:**
+
+> `0001.C719.40EC`
+
+That was the legitimate PC-BR MAC.
+
+---
+
+### Q28. What does this command do?
+
+```text
+switchport port-security violation shutdown
+```
+
+**Answer:**
+
+> It configures the switch to shut down the port when a security violation occurs, placing the interface into an err-disabled or secure-shutdown state.
+
+---
+
+### Q29. Why did you choose shutdown rather than protect or restrict?
+
+**Answer:**
+
+> Because the practical objective was to demonstrate a strong response when an unauthorized MAC appears. Shutdown immediately disables the affected access port, preventing continued use of that port by the unauthorized device.
+
+---
+
+# PART 5 — Verification
+
+### Q30. How did you verify Port Security?
+
+**Answer:**
+
+> I used:
+
+```text
+show port-security interface fastEthernet 0/2
+```
+
+and:
+
+```text
+show interfaces status
+```
+
+---
+
+### Q31. What did the initial Port Security output show?
+
+**Answer:**
+
+> Port Security was enabled, the port was Secure-up, the maximum MAC count was 1, but initially the total and sticky MAC counts were 0 because PC-BR had not generated traffic yet.
+
+The practical log records that exact situation. Pasted text
+
+---
+
+### Q32. How did you make the switch learn the legitimate MAC?
+
+**Answer:**
+
+> I generated traffic from PC-BR by pinging the branch gateway:
+
+```text
+ping 192.168.20.1
+```
+
+---
+
+### Q33. What did the verification show afterward?
+
+**Answer:**
+
+> It showed one total MAC address, one sticky MAC address, the legitimate MAC `0001.C719.40EC`, and a security violation count of zero. Pasted text
+
+---
+
+# PART 6 — Rogue Device Test
+
+### Q34. How did you test whether Port Security actually worked?
+
+**Answer:**
+
+> I disconnected the legitimate PC-BR while keeping its sticky MAC on the port. Then I connected Rogue-PC to the same Fa0/2, gave it a valid IP address, and generated traffic.
+
+---
+
+### Q35. What was the rogue MAC address?
+
+**Answer:**
+
+> `0060.3E3A.A14E`.
+
+---
+
+### Q36. Why was the first rogue ping not enough to prove the security control worked?
+
+**Answer:**
+
+> Because a failed ping by itself does not prove Port Security triggered. Initially Rogue-PC had no valid IP configuration, and the switch still showed Secure-up with a violation count of zero. I had to verify the switch state and configure the rogue device properly before performing the actual test. Pasted text
+
+**This is a very good viva question. Learn it.**
+
+---
+
+### Q37. What IP did you give Rogue-PC?
+
+**Answer:**
+
+> `192.168.20.50/24`, with gateway `192.168.20.1`.
+
+---
+
+### Q38. What happened when the properly configured Rogue-PC generated traffic?
+
+**Answer:**
+
+> Fa0/2 entered the err-disabled state. The Port Security verification showed Secure-shutdown and a Security Violation Count of 1. Pasted text
+
+---
+
+### Q39. What proves that the violation was actually caused by the different device?
+
+**Answer:**
+
+> The legitimate sticky MAC was `0001.C719.40EC`, while Rogue-PC had `0060.3E3A.A14E`. The Port Security output then showed the rogue MAC as the last source and the violation counter increased to 1.
+
+---
+
+### Q40. What was the strongest verification evidence?
+
+**Answer:**
+
+> The strongest CLI evidence was:
+
+```text
+Port Status : Secure-shutdown
+Security Violation Count : 1
+Last Source Address:Vlan :
+0060.3E3A.A14E:10
+```
+
+Pasted text
+
+---
+
+# PART 7 — Recovery
+
+### Q41. How did you recover the port?
+
+**Answer:**
+
+```text
+enable
+configure terminal
+interface fastEthernet 0/2
+shutdown
+no shutdown
+end
+```
+
+Then I reconnected PC-BR and verified connectivity.
+
+---
+
+### Q42. Why did you need to recover the port?
+
+**Answer:**
+
+> Because I configured the violation mode as shutdown. Once the security violation occurred, Fa0/2 became err-disabled, so I had to manually recover the interface before reconnecting the legitimate endpoint.
+
+---
+
+### Q43. How did you prove the legitimate device worked afterward?
+
+**Answer:**
+
+> I verified Fa0/2 was connected and pinged the gateway. The final ping produced **4 sent, 4 received, 0% loss**. Pasted text
+
+---
+
+# PART 8 — Extended ACL
+
+### Q44. Why did you implement Extended ACL?
+
+**Answer:**
+
+> I used it as the second practical configuration to demonstrate network-level access control and segmentation between a less-trusted BYOD network and the internal head-office network.
+
+---
+
+### Q45. Which threat does your Extended ACL practical relate to?
+
+**Answer:**
+
+> It relates to **Threat 4.2 — Malware via BYOD / Unmanaged Personal Devices**, which the group security plan maps to **Control 1 — Network Segmentation**.
+
+It is important to say this correctly: **Threat 4.2 is not one of my two individual threats; it is the threat used for this separate practical demonstration.** Pasted text
+
+---
+
+### Q46. What VLAN did you create?
+
+**Answer:**
+
+> VLAN 50, named `BYOD_GUEST`.
+
+---
+
+### Q47. Why VLAN 50?
+
+**Answer:**
+
+> I needed a separate network segment to represent less-trusted BYOD or guest devices so that I could demonstrate isolation from the internal HO network.
+
+---
+
+### Q48. What network did VLAN 50 use?
+
+**Answer:**
+
+> `192.168.50.0/24`.
+
+---
+
+### Q49. What was the gateway?
+
+**Answer:**
+
+> `192.168.50.1`, configured on R-HO `Gi0/0.50`.
+
+---
+
+### Q50. Why did you need Router-on-a-Stick?
+
+**Answer:**
+
+> Because VLAN 10 and VLAN 50 are separate Layer 2 networks, but they need routing between them so that the router can apply the access-control policy. Router-on-a-Stick uses router subinterfaces for the VLANs over a trunk link.
+
+---
+
+### Q51. What was the BYOD PC address?
+
+**Answer:**
+
+> `192.168.50.100/24`, gateway `192.168.50.1`.
+
+---
+
+# PART 9 — ACL Commands
+
+### Q52. What ACL did you create?
+
+**Answer:**
+
+```text
+ip access-list extended BYOD-ISOLATION
+```
+
+---
+
+### Q53. Explain this rule:
+
+```text
+deny ip 192.168.50.0 0.0.0.255 192.168.10.0 0.0.0.255
+```
+
+**Answer:**
+
+> It denies IP traffic originating from the BYOD network `192.168.50.0/24` to the internal HO network `192.168.10.0/24`.
+
+---
+
+### Q54. Why are there `0.0.0.255` values?
+
+**Answer:**
+
+> They are wildcard masks. `0.0.0.255` means the first three octets must match while the final octet can vary, so the rule represents the entire `/24` network.
+
+---
+
+### Q55. Why did you use:
+
+```text
+permit ip any any
+```
+
+**Answer:**
+
+> To allow other IP traffic that is not specifically denied by the preceding rule. The ACL therefore specifically blocks BYOD-to-internal-HO traffic rather than unintentionally blocking all IP traffic.
+
+Your practical log explicitly documents this purpose. Pasted text
+
+---
+
+### Q56. Where did you apply the ACL?
+
+**Answer:**
+
+```text
+interface gigabitEthernet 0/0.50
+ip access-group BYOD-ISOLATION in
+```
+
+---
+
+### Q57. Why inbound?
+
+**Answer:**
+
+> Because traffic entering R-HO from the BYOD VLAN should be checked as it enters the router from `Gi0/0.50`.
+
+---
+
+# PART 10 — ACL Verification
+
+### Q58. What was the result before applying the ACL?
+
+**Answer:**
+
+> BYOD-PC could ping the internal PC `192.168.10.100`, with 4/4 replies and 0% loss. Pasted text
+
+---
+
+### Q59. What happened after applying the ACL?
+
+**Answer:**
+
+> The same ping produced 100% packet loss. The traffic from the BYOD network to the internal HO network was blocked. Pasted text
+
+---
+
+### Q60. How did you prove the ACL actually processed the packets?
+
+**Answer:**
+
+> I used:
+
+```text
+show access-lists BYOD-ISOLATION
+```
+
+The deny rule showed **4 matches**, confirming that the generated packets matched the deny rule. Pasted text
+
+---
+
+### Q61. How did you verify the ACL was actually attached to the interface?
+
+**Answer:**
+
+```text
+show ip interface gigabitEthernet 0/0.50
+```
+
+The output showed:
+
+```text
+Inbound access list is BYOD-ISOLATION
+```
+
+Pasted text
+
+---
+
+# PART 11 — Very Important "Trick" Questions
+
+### Q62. Does your Extended ACL detect malware?
+
+**Answer:**
+
+> No. It does not detect or remove malware. It provides network-level access restriction and supports segmentation. Endpoint protection, monitoring and incident response would still be required.
+
+Pasted text
+
+---
+
+### Q63. Does Port Security prevent all Layer 2 attacks?
+
+**Answer:**
+
+> No. Port Security specifically controls which MAC addresses can use an access port. Other Layer 2 threats require other controls. For example, DHCP Snooping addresses rogue DHCP-server behavior, while DAI is used against ARP-spoofing-related risk. Pasted text
+
+---
+
+### Q64. Is Extended ACL the same thing as network segmentation?
+
+**Answer:**
+
+> No. VLANs and network architecture provide segmentation, while the Extended ACL enforces communication restrictions between the segments. In my practical, VLAN 50 created the separate BYOD segment and the ACL restricted its access to the internal HO network.
+
+---
+
+### Q65. Can an ACL replace a firewall?
+
+**Answer:**
+
+> No. An ACL provides packet-filtering and access-control functionality, but a dedicated firewall can provide much broader security capabilities depending on the technology, such as stateful inspection and advanced security controls.
+
+---
+
+### Q66. Why didn't you use Port Security to solve Threat 3.1?
+
+**Answer:**
+
+> Because Threat 3.1 is about unauthorized remote access through a shared VPN account. Port Security operates at the switch access-port level and does not address VPN authentication or remote-access identity.
+
+---
+
+### Q67. What would directly address Threat 3.1?
+
+**Answer:**
+
+> Individual VPN accounts, centralized AAA, MFA, proper authorization, and logging/accountability would directly address the shared-VPN credential problem.
+
+---
+
+### Q68. What would directly address DHCP spoofing?
+
+**Answer:**
+
+> DHCP Snooping is the more direct Layer 2 control for rogue DHCP-server behavior. It can identify trusted and untrusted switch ports and build DHCP bindings. Port Security is an additional access-port hardening measure, not a replacement for DHCP Snooping.
+
+---
+
+# PART 12 — UplinkFast
+
+This is important because your lecturer may ask:
+
+### Q69. Why didn't you implement UplinkFast?
+
+**Answer:**
+
+> UplinkFast was originally assigned as my second configuration. When I attempted to configure it, the Cisco 2960 Packet Tracer IOS available to me did not provide the `spanning-tree uplinkfast` command. Also, the assigned SW-BR topology had only one physical uplink, so there was no redundant uplink path on which I could demonstrate UplinkFast failover. Therefore, I did not fabricate a configuration or claim unsupported evidence. I documented the limitation and implemented Extended ACL separately.
+
+Your Extended ACL practical log documents both reasons. Pasted text
+
+---
+
+### Q70. What IOS were you using?
+
+**Answer:**
+
+> Cisco IOS `C2960-LANBASEK9-M`, Version `15.0(2)SE4`.
+
+---
+
+### Q71. What did the switch show when you entered the command?
+
+**Answer:**
+
+> It returned:
+
+```text
+% Invalid input detected at '^' marker.
+```
+
+---
+
+### Q72. Why is a redundant uplink important for UplinkFast?
+
+**Answer:**
+
+> UplinkFast is designed to provide rapid transition to an alternative uplink when the primary path fails. Without a redundant uplink, there is no alternative path on which to demonstrate that behavior.
+
+---
+
+# PART 13 — Topology Questions
+
+### Q73. What is the connection between PC-BR and SW-BR?
+
+**Answer:**
+
+> PC-BR `Fa0` connects to SW-BR `Fa0/2`.
+
+---
+
+### Q74. What connects SW-BR to R-BR?
+
+**Answer:**
+
+> SW-BR `Fa0/1` connects to R-BR `Gi0/0`.
+
+---
+
+### Q75. What connects the two routers?
+
+**Answer:**
+
+> R-HO `Gi0/1` connects directly to R-BR `Gi0/1`.
+
+---
+
+### Q76. What is R-HO's branch-link address?
+
+**Answer:**
+
+> R-HO `Gi0/1` = `10.0.0.1/30`.
+
+---
+
+### Q77. What is R-BR's corresponding address?
+
+**Answer:**
+
+> R-BR `Gi0/1` = `10.0.0.2/30`.
+
+---
+
+# PART 14 — "Explain the whole thing in 30 seconds"
+
+This is one you should **memorize conceptually**, not word-for-word:
+
+> **“I am Member 3. My two identified threats are unauthorized remote access through the shared VPN and DHCP spoofing at branch offices. For the practical, my plan-linked configuration was Port Security on SW-BR Fa0/2 for Threat 3.2 and Control 2. I configured maximum one MAC, sticky learning and shutdown violation mode. I learned the legitimate PC-BR MAC, then replaced it with a Rogue-PC using a different MAC. The port became err-disabled and the violation counter became 1. I recovered the port and restored PC-BR connectivity. My second demonstrated practical was an Extended ACL for BYOD network isolation. I created VLAN 50, used Router-on-a-Stick, and denied traffic from the BYOD network to the internal HO network. I verified the ACL with the before/after ping, four ACL matches, and interface attachment.”**
+
+That is the **core story of your practical**.
+
+### Your five numbers/identifiers to know cold
+
+| Item | Answer |
+|---|---|
+| Threat 3.1 | Unauthorized Remote Access via Shared VPN |
+| Threat 3.2 | DHCP Spoofing at Branch Offices |
+| Port Security interface | `SW-BR Fa0/2` |
+| Legitimate MAC | `0001.C719.40EC` |
+| Rogue MAC | `0060.3E3A.A14E` |
+| BYOD VLAN | VLAN 50 |
+| BYOD network | `192.168.50.0/24` |
+| Internal HO network | `192.168.10.0/24` |
+| ACL | `BYOD-ISOLATION` |
+| Port violation count | `1` |
+| Final legitimate ping | `4/4, 0% loss` |
+
+This gives us a solid base. The next useful stage is to turn this into a **hard viva drill**: questions from easy → medium → “lecturer tries to catch you” questions, with short spoken answers you can actually say naturally.

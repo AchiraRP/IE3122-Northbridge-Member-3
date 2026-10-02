@@ -1,0 +1,645 @@
+============================================================
+IE3122 NETWORK SECURITY
+NORTHBRIDGE SAVINGS & FINANCE
+MEMBER 3 - EXTENDED ACL PRACTICAL LOG
+============================================================
+
+Student Role:
+Member 3
+
+Primary Configuration:
+Port Security
+
+Second / Free-Choice Configuration:
+Extended ACL - BYOD Network Isolation
+
+Originally Assigned Second Configuration:
+UplinkFast
+
+============================================================
+1. PRACTICAL OBJECTIVE
+============================================================
+
+The purpose of this practical was to implement and verify
+network security hardening configurations for the Northbridge
+Savings & Finance network.
+
+Member 3 was assigned:
+
+1. Port Security
+2. UplinkFast
+
+Port Security was successfully implemented and tested.
+
+UplinkFast was investigated but was not implemented because
+the available Packet Tracer Cisco 2960 IOS did not provide the
+spanning-tree uplinkfast command. In addition, the assigned
+Northbridge topology contained only one physical uplink from
+SW-BR, so there was no redundant uplink path on which the
+UplinkFast failover behavior could be demonstrated.
+
+Instead of claiming an unsupported or non-demonstrable
+configuration, a separate Extended ACL practical was
+implemented and fully verified.
+
+The Extended ACL was used to demonstrate network isolation
+between a BYOD/Guest network and the internal HO network.
+
+============================================================
+2. WHY UPLINKFAST WAS NOT IMPLEMENTED
+============================================================
+
+The original practical assignment for Member 3 included
+UplinkFast as the second configuration.
+
+During implementation, the following command was attempted
+on SW-BR:
+
+    spanning-tree uplinkfast
+
+The Packet Tracer switch returned:
+
+    % Invalid input detected at '^' marker.
+
+The switch was a Cisco Catalyst 2960 using:
+
+    Cisco IOS C2960-LANBASEK9-M
+    Version 15.0(2)SE4
+
+The available spanning-tree command options did not include
+the UplinkFast command.
+
+A second limitation was identified in the assigned topology.
+SW-BR had only one physical uplink toward R-BR. UplinkFast is
+intended for rapid transition to an alternative redundant
+uplink when the primary uplink fails. Since the assigned
+topology did not provide a second redundant uplink, a genuine
+UplinkFast failover demonstration could not be performed.
+
+Therefore UplinkFast was not falsely claimed as implemented.
+The limitation was documented, and Extended ACL was used as a
+separately demonstrated second practical configuration.
+
+============================================================
+3. WHY EXTENDED ACL WAS SELECTED
+============================================================
+
+The Extended ACL was selected because it provides a practical
+way to demonstrate network-level access control and isolation.
+
+The Northbridge case study includes BYOD/unmanaged personal
+devices as a security concern.
+
+Threat 4.2 is:
+
+    Malware via BYOD / Unmanaged Personal Devices
+
+The threat scenario involves unmanaged personal devices that
+may introduce malware into the organization.
+
+The group security plan maps Threat 4.2 to:
+
+    Control 1 - Network Segmentation
+
+An Extended ACL can enforce communication restrictions between
+different network segments.
+
+For this practical, a separate BYOD/Guest VLAN was created.
+The ACL was designed to prevent the BYOD network from directly
+accessing the internal HO network.
+
+The purpose was not to detect or remove malware.
+
+Instead, the ACL provides network-level access control so that
+if an unmanaged BYOD device becomes compromised, its ability
+to communicate with sensitive internal resources can be
+restricted.
+
+============================================================
+4. NORTHBRIDGE SCENARIO RELEVANCE
+============================================================
+
+The Northbridge case study identifies BYOD/unmanaged personal
+devices as a security concern.
+
+An unmanaged personal device can represent an additional
+network entry point.
+
+If such a device becomes compromised, unrestricted network
+access could allow it to communicate with internal systems.
+
+Network segmentation and access-control rules can reduce this
+risk by separating less-trusted devices from sensitive
+internal networks.
+
+The practical therefore demonstrates the following security
+principle:
+
+    BYOD / less-trusted network
+             |
+             | Extended ACL
+             v
+    Restricted access to
+    internal HO network
+
+The ACL does not replace endpoint protection, malware
+detection, or incident response. It provides a network-level
+restriction that supports segmentation.
+
+============================================================
+5. THREAT AND CONTROL MAPPING
+============================================================
+
+Threat:
+
+    Threat 4.2 - Malware via BYOD / Unmanaged Personal Devices
+
+Control:
+
+    Control 1 - Network Segmentation
+
+Configuration:
+
+    Extended ACL
+
+Security objective:
+
+    Prevent the BYOD network from directly accessing the
+    internal HO network.
+
+Important clarification:
+
+    Extended ACL does not remove malware.
+
+    It restricts network communication from the BYOD segment
+    to protected internal networks.
+
+============================================================
+6. BASE TOPOLOGY
+============================================================
+
+The original Northbridge topology contained:
+
+    R-HO
+    R-BR
+    SW-HO
+    SW-BR
+    Server-DHCP
+    PC-HO
+    PC-BR
+
+Existing HO network:
+
+    192.168.10.0/24
+
+R-HO existing gateway:
+
+    192.168.10.1
+
+A new BYOD-PC was added for this practical.
+
+The BYOD-PC was connected to:
+
+    BYOD-PC Fa0
+        |
+        |
+    SW-HO Fa0/4
+
+The existing SW-HO Fa0/3 connection to R-HO Gi0/0
+was reused as the trunk link.
+
+============================================================
+7. STEP 1 - ADD BYOD-PC
+============================================================
+
+A new PC named:
+
+    BYOD-PC
+
+was added to the Packet Tracer topology.
+
+The PC was connected as:
+
+    BYOD-PC Fa0
+        ->
+    SW-HO Fa0/4
+
+Fa0/4 was selected because the existing ports were already
+used by the original Northbridge devices.
+
+Existing relevant SW-HO connections:
+
+    Fa0/1 -> Server-DHCP
+    Fa0/2 -> PC-HO
+    Fa0/3 -> R-HO Gi0/0
+    Fa0/4 -> BYOD-PC
+
+============================================================
+8. STEP 2 - CREATE BYOD VLAN
+============================================================
+
+A new VLAN was created on SW-HO:
+
+    VLAN 50
+    Name: BYOD_GUEST
+
+Commands:
+
+    enable
+    configure terminal
+    vlan 50
+    name BYOD_GUEST
+    exit
+
+The purpose of VLAN 50 was to represent a separate,
+less-trusted BYOD/Guest network.
+
+============================================================
+9. STEP 3 - CONFIGURE BYOD ACCESS PORT
+============================================================
+
+SW-HO Fa0/4 was configured as an access port in VLAN 50.
+
+Commands:
+
+    interface fastEthernet 0/4
+    switchport mode access
+    switchport access vlan 50
+    end
+
+Verification was performed using:
+
+    show vlan brief
+
+The verification confirmed that:
+
+    VLAN 50 - BYOD_GUEST
+
+contained:
+
+    Fa0/4
+
+============================================================
+10. STEP 4 - CONFIGURE THE SWITCH-TO-ROUTER LINK AS TRUNK
+============================================================
+
+The existing SW-HO Fa0/3 to R-HO Gi0/0 connection was
+converted to a trunk.
+
+SW-HO configuration:
+
+    configure terminal
+    interface fastEthernet 0/3
+    switchport mode trunk
+
+The trunk allows multiple VLANs to use the router connection.
+
+============================================================
+11. STEP 5 - CONFIGURE ROUTER-ON-A-STICK
+============================================================
+
+R-HO Gi0/0 originally carried the existing HO LAN IP address
+directly.
+
+The physical interface was changed so that VLAN subinterfaces
+could be used.
+
+Configuration:
+
+    interface gigabitEthernet 0/0
+    no ip address
+
+The existing HO LAN gateway was moved to:
+
+    Gi0/0.10
+
+Configuration:
+
+    interface gigabitEthernet 0/0.10
+    encapsulation dot1Q 10
+    ip address 192.168.10.1 255.255.255.0
+
+This preserved the existing HO network gateway.
+
+============================================================
+12. STEP 6 - CONFIGURE BYOD VLAN SUBINTERFACE
+============================================================
+
+A router subinterface was created for VLAN 50:
+
+    interface gigabitEthernet 0/0.50
+    encapsulation dot1Q 50
+    ip address 192.168.50.1 255.255.255.0
+
+The BYOD network therefore became:
+
+    Network: 192.168.50.0/24
+    Gateway: 192.168.50.1
+
+============================================================
+13. STEP 7 - CONFIGURE BYOD-PC IP ADDRESS
+============================================================
+
+BYOD-PC was configured with:
+
+    IP Address:       192.168.50.100
+    Subnet Mask:      255.255.255.0
+    Default Gateway: 192.168.50.1
+
+This placed BYOD-PC inside VLAN 50.
+
+============================================================
+14. STEP 8 - BASELINE TEST BEFORE ACL
+============================================================
+
+Before applying the ACL, connectivity was tested from
+BYOD-PC to the existing internal PC:
+
+    ping 192.168.10.100
+
+The second baseline test produced:
+
+    Sent = 4
+    Received = 4
+    Lost = 0
+    0% loss
+
+This demonstrated that, before the ACL was applied, the BYOD
+network could communicate with the internal HO PC.
+
+This baseline was important because it provided a measurable
+before-and-after comparison.
+
+Evidence:
+
+    14_ExtendedACL_Before_Baseline.png
+
+============================================================
+15. STEP 9 - CREATE EXTENDED ACL
+============================================================
+
+An extended named ACL was created on R-HO:
+
+    ip access-list extended BYOD-ISOLATION
+
+The ACL was designed to deny traffic from the BYOD network:
+
+    192.168.50.0/24
+
+to the internal HO network:
+
+    192.168.10.0/24
+
+The deny rule was:
+
+    deny ip 192.168.50.0 0.0.0.255
+             192.168.10.0 0.0.0.255
+
+A general permit rule was then added:
+
+    permit ip any any
+
+The purpose of the permit rule was to avoid unintentionally
+blocking all other IP traffic after the specific deny rule.
+
+============================================================
+16. STEP 10 - APPLY ACL TO BYOD INTERFACE
+============================================================
+
+The ACL was applied inbound on the BYOD VLAN subinterface:
+
+    interface gigabitEthernet 0/0.50
+    ip access-group BYOD-ISOLATION in
+
+This means traffic entering R-HO from the BYOD VLAN is checked
+against the BYOD-ISOLATION ACL.
+
+============================================================
+17. STEP 11 - TEST AFTER ACL
+============================================================
+
+The same test was performed again from BYOD-PC:
+
+    ping 192.168.10.100
+
+After applying the ACL, the result was:
+
+    Sent = 4
+    Received = 0
+    Lost = 4
+    100% loss
+
+The output also showed:
+
+    Destination host unreachable
+
+This demonstrated that traffic from the BYOD network to the
+internal HO network was now blocked.
+
+Evidence:
+
+    15_ExtendedACL_Before_After_Comparison.png
+
+The screenshot demonstrates the difference between the
+successful pre-ACL test and the blocked post-ACL test.
+
+============================================================
+18. STEP 12 - VERIFY ACL HIT COUNTER
+============================================================
+
+The ACL was verified using:
+
+    show access-lists BYOD-ISOLATION
+
+The deny rule showed:
+
+    (4 match(es))
+
+This confirmed that packets generated by the BYOD-PC had
+matched the deny rule.
+
+Evidence:
+
+    16_ExtendedACL_Hit_Counter.png
+
+This is stronger evidence than relying only on the failed ping,
+because the router's ACL counter confirms that the ACL processed
+the traffic.
+
+============================================================
+19. STEP 13 - VERIFY ACL ATTACHMENT
+============================================================
+
+The interface configuration was verified using:
+
+    show ip interface gigabitEthernet 0/0.50
+
+The output confirmed:
+
+    GigabitEthernet0/0.50 is up
+    Internet address is 192.168.50.1/24
+    Inbound access list is BYOD-ISOLATION
+
+This confirms that the ACL was attached inbound to the BYOD
+VLAN interface.
+
+Evidence:
+
+    17_ExtendedACL_Interface_Verification.png
+
+============================================================
+20. STEP 14 - SAVE CONFIGURATION
+============================================================
+
+The R-HO configuration was saved using:
+
+    copy running-config startup-config
+
+The router returned:
+
+    [OK]
+
+The Packet Tracer project was also saved as:
+
+    Northbridge_Member3_ExtendedACL.pkt
+
+============================================================
+21. FINAL EXTENDED ACL CONFIGURATION
+============================================================
+
+SW-HO:
+
+    vlan 50
+    name BYOD_GUEST
+
+    interface fastEthernet 0/4
+    switchport mode access
+    switchport access vlan 50
+
+    interface fastEthernet 0/3
+    switchport mode trunk
+
+
+R-HO:
+
+    interface gigabitEthernet 0/0
+    no ip address
+    no shutdown
+
+    interface gigabitEthernet 0/0.10
+    encapsulation dot1Q 10
+    ip address 192.168.10.1 255.255.255.0
+
+    interface gigabitEthernet 0/0.50
+    encapsulation dot1Q 50
+    ip address 192.168.50.1 255.255.255.0
+
+    ip access-list extended BYOD-ISOLATION
+    deny ip 192.168.50.0 0.0.0.255
+             192.168.10.0 0.0.0.255
+    permit ip any any
+
+    interface gigabitEthernet 0/0.50
+    ip access-group BYOD-ISOLATION in
+
+============================================================
+22. EVIDENCE FILES
+============================================================
+
+Baseline:
+
+    14_ExtendedACL_Before_Baseline.png
+
+Before/After comparison:
+
+    15_ExtendedACL_Before_After_Comparison.png
+
+ACL hit counter:
+
+    16_ExtendedACL_Hit_Counter.png
+
+ACL interface verification:
+
+    17_ExtendedACL_Interface_Verification.png
+
+Command script:
+
+    Member3_ExtendedACL_Commands.txt
+
+Packet Tracer project:
+
+    Northbridge_Member3_ExtendedACL.pkt
+
+============================================================
+23. SECURITY RESULT
+============================================================
+
+Before the ACL:
+
+    BYOD-PC (192.168.50.100)
+             |
+             v
+    Internal PC (192.168.10.100)
+
+    Result: 4/4 successful
+
+After the ACL:
+
+    BYOD-PC (192.168.50.100)
+             |
+             X
+    Internal PC (192.168.10.100)
+
+    Result: 4/4 blocked
+
+The ACL therefore demonstrated network-level isolation between
+the BYOD network and the internal HO network.
+
+============================================================
+24. IMPORTANT SECURITY LIMITATION
+============================================================
+
+The Extended ACL is not a malware detection or removal
+mechanism.
+
+It does not:
+
+    - scan the BYOD device for malware
+    - remove malware
+    - replace endpoint protection
+    - replace SIEM monitoring
+    - replace incident response
+
+Its role in this practical is to enforce network-level access
+restrictions and support segmentation.
+
+Therefore, the configuration should be described as a
+segmentation/access-control measure for the BYOD threat rather
+than as a complete malware-defense solution.
+
+============================================================
+25. FINAL PRACTICAL CONCLUSION
+============================================================
+
+The Extended ACL practical successfully demonstrated how a
+separate BYOD network can be isolated from the internal HO
+network.
+
+The implementation created VLAN 50, configured router-on-a-stick
+connectivity, assigned BYOD-PC an address in the new network,
+created an Extended ACL, applied it inbound to the BYOD
+subinterface, and verified the result using connectivity tests,
+ACL match counters, and interface verification.
+
+The practical provides a direct demonstration of the security
+principle of restricting less-trusted BYOD traffic from
+sensitive internal network resources.
+
+UplinkFast was not claimed as completed because the available
+Packet Tracer IOS did not support the required command and the
+assigned topology did not contain a redundant uplink path for
+meaningful failover testing.
+
+============================================================
+END OF PRACTICAL LOG
+============================================================
